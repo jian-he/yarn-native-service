@@ -1,0 +1,99 @@
+{
+    "name": "jian-hbase37",
+    "configuration" : {
+    	"files" : [
+                {
+                    "type": "XML",
+                    "dest_file": "/etc/hadoop/conf/core-site.xml",
+                    "props" : {
+                        "fs.defaultFS" : "hdfs://yclouddev"
+                    }
+                },
+                {
+                    "type": "XML",
+                    "dest_file": "/etc/hadoop/conf/hdfs-site.xml",
+                    "props" : {
+                        "dfs.nameservices": "yclouddev",
+                        "dfs.client.failover.proxy.provider.yclouddev": "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider",
+                        "dfs.ha.namenodes.yclouddev": "nn1,nn2",
+                        "dfs.namenode.rpc-address.yclouddev.nn1": "cn005.l42scl.hortonworks.com:8020",
+                        "dfs.namenode.rpc-address.yclouddev.nn2": "cn008.l42scl.hortonworks.com:8020"
+                    }
+                },
+				{
+                    "type": "XML",
+                    "dest_file": "/etc/hbase/conf/hbase-site.xml",
+                    "props" : {
+                        "hbase.cluster.distributed": "true",
+                        "hbase.zookeeper.quorum": "cn005.l42scl.hortonworks.com,cn006.l42scl.hortonworks.com,cn007.l42scl.hortonworks.com",
+                        "hbase.rootdir": "${DEFAULT_DATA_DIR}/hbase",
+                        "zookeeper.znode.parent": "/hbase/${SERVICE_NAME}",
+                        "hbase.master.hostname": "hbasemaster.${SERVICE_NAME}.root.hwxdev.site",
+                        "hbase.master.dns.nameserver": "cn008.l42scl.hortonworks.com",
+                        "hbase.master.info.port": "16010",
+                        "hbase.regionserver.hostname": "${COMPONENT_INSTANCE_NAME}.${SERVICE_NAME}.root.hwxdev.site"
+                    }
+                }
+    		
+    		]
+    },
+    
+    "components": [
+        {
+            "name": "HBASEMASTER",
+            "number_of_containers": 1,
+            "artifact": {
+                "id": "hortonworks/ycloud-hbase:0.1",
+                "type": "DOCKER"
+            },
+            "launch_command": "sleep 60; hbase master start",
+            "resource": {
+                "cpus": 1,
+                "memory": "4096"
+            }
+        },
+        {
+            "name": "REGIONSERVER",
+			"unique_component_support" : "true",
+            "number_of_containers": 3,
+            "artifact": {
+                "id": "hortonworks/ycloud-hbase:0.1",
+                "type": "DOCKER"
+            },
+            "launch_command": "sleep 120; hbase regionserver start",
+            "resource": {
+                "cpus": 1,
+                "memory": "4096"
+            },
+            "configuration": {
+                "files": [
+                    {
+                        "type": "PROPERTIES",
+                        "dest_file": "/etc/hbase/conf/hadoop-metrics2-hbase.properties",
+                        "props" : {
+                            "hbase.extendedperiod": "3600",
+                            "*.timeline.plugin.urls": "file:///ambari-metrics-hadoop-sink.jar",
+                            "hbase.class": "org.apache.hadoop.metrics2.sink.timeline.HadoopTimelineMetricsSink",
+                            "hbase.period": "10",
+                            "hbase.collector": "http://cn007.l42scl.hortonworks.com:6188",
+                            "jvm.class": "org.apache.hadoop.metrics2.sink.timeline.HadoopTimelineMetricsSink",
+                            "jvm.period": "10",
+                            "jvm.collector": "http://cn007.l42scl.hortonworks.com:6188",
+                            "rpc.class": "org.apache.hadoop.metrics2.sink.timeline.HadoopTimelineMetricsSink",
+                            "rpc.period": "10",
+                            "rpc.collector": "http://cn007.l42scl.hortonworks.com:6188",
+                            "hbase.sink.timeline.class": "org.apache.hadoop.metrics2.sink.timeline.HadoopTimelineMetricsSink",
+                            "hbase.sink.timeline.period": "10",
+                            "hbase.sink.timeline.collector": "http://cn007.l42scl.hortonworks.com:6188",
+                            "hbase.sink.timeline.serviceName": "${SERVICE_NAME}"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+
+    "quicklinks": {
+        "HBase Master Status UI": "http://HBASEMASTER.${SERVICE_NAME}.root.hwxdev.site:${hbase.master.info.port}/master-status"
+    }
+}

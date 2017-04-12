@@ -1,0 +1,55 @@
+{
+    "name": "jian-hbase72",
+    "configuration" : {
+        "files" : [
+                    {
+                        "type": "HADOOP_XML_TEMPLATE",
+                        "src_file": "hdfs://yclouddev/tmp/conf/core-site.xml",
+                        "dest_file": "/etc/hadoop/conf/core-site.xml"
+                    },
+                    {
+                        "type": "HADOOP_XML_TEMPLATE",
+                        "src_file": "hdfs://yclouddev/tmp/conf/hbase-site.xml",
+                        "dest_file": "/etc/hbase/conf/hbase-site.xml"
+                    },
+                    {
+                        "type": "HADOOP_XML_TEMPLATE",
+                        "src_file": "hdfs://yclouddev/tmp/conf/hdfs-site.xml",
+                        "dest_file": "/etc/hadoop/conf/hdfs-site.xml"
+                    }
+        ]
+    },
+    "components": [
+        {
+            "name": "HBASEMASTER",
+            "number_of_containers": 1,
+            "artifact": {
+                "id": "hortonworks/ycloud-hbase:0.1",
+                "type": "DOCKER"
+            },
+            "launch_command": "sleep 60; hbase master start",
+            "resource": {
+                "cpus": 1,
+                "memory": "4096"
+            }
+        },
+
+        {
+            "name": "REGIONSERVER",
+            "number_of_containers": 3,
+            "artifact": {
+                "id": "hortonworks/ycloud-hbase:0.1",
+                "type": "DOCKER"
+            },
+            "launch_command": "sleep 60; hbase regionserver start",
+            "resource": {
+                "cpus": 1,
+                "memory": "4096"
+            }
+        }
+    ],
+
+    "quicklinks": {
+        "HBase Master Status UI": "http://HBASEMASTER.${SERVICE_NAME}.root.hwxdev.site:16010/master-status"
+    }
+}
